@@ -23,13 +23,23 @@ class FileManager
 end
 
 class Islands
-	attr_reader :number, :all_island
+	attr_reader :number, :all_island, :spent_islands
 	def initialize(map_data)
 		@number = map_data[0]
 		@all_island = map_data[1]
+		@spent_islands = []
 	end
-	def islands_with_index(index)
-		@all_island[index]
+	def adjoin_islands_with_index(index)
+		@all_island[index] - @spent_islands
+	end
+	def islands_route_number_with_index(select_island_index)
+		island_route_number = []
+		adjoin_islands_with_index(select_island_index).each do |index|
+			route_number = adjoin_islands_with_index(index).length
+			island_route_number << route_number
+			break if route_number >= 1
+		end
+		island_route_number
 	end
 end
 
@@ -37,34 +47,30 @@ class Searcher
 	def initialize(islands)
 		@islands = islands
 	end
-	def search
-		stamp = []
+	def search_islands
 		start_islands = make_start_islands
-		ideal_stamp = make_ideal_stamp_with_islands(@islands)
+		stamp = []
+		ideal_stamp = 0
 		while stamp.length <= ideal_stamp && start_islands.length != 0
-			spent_islands = [] 
-			next_islands = [] 
-			island_weight = []
-			select_island_index = start_islands.sample
-			start_islands.delete(select_island_index)
-			spent_islands << select_island_index 
-			adjoin_islands = @islands.islands_with_index(select_island_index) - spent_islands
-			while adjoin_islands.length != 0
-				adjoin_islands.each do |index|
-					next_islands = @islands.islands_with_index(index) - spent_islands
-					island_weight << next_islands.length
-					break if next_islands.length >= 1
-				end
-				select_island_index = adjoin_islands[island_weight.index(island_weight.max)]
-				break if select_island_index.nil?
-				spent_islands << select_island_index
-				adjoin_islands = @islands.islands_with_index(select_island_index) - spent_islands
-			end
-			if stamp.length < spent_islands.length
-				stamp = spent_islands
-			end
+			start_island_index = start_islands.sample
+			start_islands.delete(start_island_index)
+			ideal_stamp = make_ideal_stamp_with_islands(@islands)
+			stamp = search_route(start_island_index)	
 		end
 		stamp
+	end
+	def search_route(start_island_index)
+		select_island_index = start_island_index
+		@islands.spent_islands << select_island_index
+		adjoin_islands = @islands.adjoin_islands_with_index(select_island_index)
+		while adjoin_islands.length != 0
+			islands_route_number = @islands.islands_route_number_with_index(select_island_index)
+			select_island_index = adjoin_islands[islands_route_number.index(islands_route_number.max)]
+			break if select_island_index.nil?
+			adjoin_islands = @islands.adjoin_islands_with_index(select_island_index)
+			@islands.spent_islands << select_island_index
+		end
+		@islands.spent_islands
 	end
 	def make_start_islands
 		start_islands = []
@@ -85,9 +91,10 @@ class Searcher
 		ideal_stamp.to_i
 	end
 end
+
 fileManager = FileManager.new
 map_data = fileManager.read_with_file_name("map.txt")
 islands = Islands.new(map_data)
 searcher = Searcher.new(islands)
-stamp = searcher.search
+stamp = searcher.search_islands
 fileManager.write(stamp)
