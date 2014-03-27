@@ -1,25 +1,28 @@
 class FileManager
-	def read_with_file_name(file_name)
-		input_file = open(file_name)
-		map_data = [island_number(input_file), islands(input_file)]
-		input_file.close
+	def read(file_name)
+		@input_file = open(file_name)
+		map_data = [island_number, islands]
+		@input_file.close
 		map_data
 	end
-	def island_number(input_file)
-		input_file.gets.to_i
-	end
-	def islands(input_file)
-		islands = []
-		input_file.readlines.each do |data|
-			islands << data.split(" ").map{|temp| temp.to_i}
-		end
-		islands
-	end
-	def write_with_data(data)
+	def write(data)
 		output_file = open("stampsheet.txt","w")
 		output_file << data.join("\n")
 		output_file.close
 	end
+
+	private
+	def island_number
+		@input_file.gets.to_i
+	end
+	def islands
+		islands = []
+		@input_file.readlines.each do |data|
+			islands << data.split(" ").map{|temp| temp.to_i}
+		end
+		islands
+	end
+	
 end
 
 class Islands
@@ -94,8 +97,8 @@ class Searcher
 end
 
 fileManager = FileManager.new
-map_data = fileManager.read_with_file_name("map2.txt")
+map_data = fileManager.read("map.txt")
 islands = Islands.new(map_data)
 searcher = Searcher.new(islands)
 stamp = searcher.search_islands
-fileManager.write_with_data(stamp)
+fileManager.write(stamp)
