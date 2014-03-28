@@ -1,7 +1,8 @@
 class FileManager
 	def read(file_name)
 		@input_file = open(file_name)
-		map_data = [island_number, islands]
+		#map_data = [island_number, islands]
+		map_data = {"number" => island_number, "islands" => islands}
 		@input_file.close
 		map_data
 	end
@@ -22,14 +23,13 @@ class FileManager
 		end
 		islands
 	end
-	
 end
 
 class Islands
 	attr_reader :number, :all_island, :spent_islands
 	def initialize(map_data)
-		@number = map_data[0]
-		@all_island = map_data[1]
+		@number = map_data['number']
+		@all_island = map_data['islands']
 	end
 	def adjoin_islands(index)
 		@all_island[index] - @spent_islands
@@ -64,6 +64,8 @@ class Searcher
 		end
 		stamp
 	end
+
+	private
 	def search_route(start_island_index)
 		select_island_index = start_island_index
 		@islands.spent_islands << select_island_index
